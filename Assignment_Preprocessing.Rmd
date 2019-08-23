@@ -1,0 +1,210 @@
+---
+title: "Assignment_Preprocessing"
+author: "Veera_Namana"
+date: "8/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+#Read Customer data file
+
+```{r}
+
+customer_data <- read.csv("Customer_Data.csv", row.names = NULL)
+View(customer_data)
+
+```
+
+
+#high level analysis
+
+```{r}
+
+summary(customer_data)
+
+```
+
+#column analysis
+
+```{r}
+
+str(customer_data)
+
+```
+
+#Check categorical data
+
+```{r}
+table(customer_data$City)
+length(unique(customer_data$City))
+
+table(customer_data$FavoriteChannelOfTransaction)
+length(unique(customer_data$FavoriteChannelOfTransaction))
+
+table(customer_data$FavoriteGame)
+length(unique(customer_data$FavoriteGame))
+
+```
+
+#Check numerical data
+
+```{r}
+table(customer_data$NoOfUnitsPurchased)
+length(unique(customer_data$NoOfUnitsPurchased))
+
+table(customer_data$Tenure)
+length(unique(customer_data$Tenure))
+
+table(customer_data$NoOfGamesPlayed)
+length(unique(customer_data$NoOfGamesPlayed))
+
+table(customer_data$NoOfGamesBought)
+length(unique(customer_data$NoOfGamesBought))
+
+table(customer_data$TotalRevenueGenerated)
+length(unique(customer_data$TotalRevenueGenerated))
+
+table(customer_data$FrequencyOFPlay)
+length(unique(customer_data$FrequencyOFPlay))
+
+
+table(customer_data$FrquncyOfPurchase)
+length(unique(customer_data$FrquncyOfPurchase))
+
+table(customer_data$NoOfChildren)
+length(unique(customer_data$NoOfChildren))
+
+table(customer_data$MinAgeOfChild)
+length(unique(customer_data$MinAgeOfChild))
+
+table(customer_data$MaxAgeOfChild)
+length(unique(customer_data$MaxAgeOfChild))
+```
+ 
+#head and tail functions
+
+```{r}
+head(customer_data,10)
+
+tail(customer_data,10)
+```
+
+#Drop unnecessary columns
+
+```{r}
+
+customer_data$CustomerID <- NULL
+customer_data
+
+```
+
+#converting numerical variables to categorical
+
+```{r}
+
+customer_data$City <- as.factor(customer_data$City)
+#customer_data$NoOfChildren <- as.factor(customer_data$NoOfChildren)
+#customer_data$MinAgeOfChild <- as.factor(customer_data$MinAgeOfChild)
+#customer_data$MaxAgeOfChild  <- as.factor(customer_data$MaxAgeOfChild)
+#customer_data$FrquncyOfPurchase <- as.factor(customer_data$FrquncyOfPurchase)
+#customer_data$FrequencyOFPlay <- as.factor(customer_data$FrequencyOFPlay)
+customer_data$FavoriteChannelOfTransaction <- as.factor(customer_data$FavoriteChannelOfTransaction)
+customer_data$FavoriteGame <- as.factor(customer_data$FavoriteGame)
+str(customer_data)
+
+```
+
+#Missing values in entire dataset
+
+```{r}
+
+sum(is.na(customer_data))
+
+```
+
+#Missing values per column
+
+```{r}
+
+colSums(is.na(customer_data))
+
+```
+#Imputing 'None' with 'Uniform' in FavouriteGame
+
+```{r}
+
+#customer_data$FavoriteGame[which(customer_data$FavoriteGame=="None")] = "Uniform"
+#customer_data$FavoriteGame <- factor(customer_data$FavoriteGame) 
+
+```
+
+#Dummify the categorical variables
+
+```{r}
+
+library(fastDummies)
+customer_data_dumm <- dummy_cols(customer_data,remove_first_dummy = TRUE)
+
+```
+
+#Drop City,FavoriteChannelOfTransaction,FavoriteGame
+
+```{r}
+
+dropcols <- c("City","FavoriteChannelOfTransaction","FavoriteGame")
+customer_data_dumm[,dropcols]<- NULL
+```
+
+
+#Split the dataset into train and test - Train:Test split(70:30)
+
+```{r}
+
+set.seed(125)
+rows = seq(1,nrow(customer_data_dumm),1)
+trainrows = sample(rows,(70*nrow(customer_data_dumm))/100)
+customer_data_train = customer_data_dumm[trainrows,]
+customer_data_test = customer_data_dumm[-trainrows,]
+nrow(customer_data_train)
+nrow(customer_data_test)
+
+```
+
+#Missing values per column in Train dataset
+
+```{r}
+
+colSums(is.na(customer_data_train))
+summary(customer_data_train)
+
+
+colSums(is.na(customer_data_train_Imputed))
+summary(customer_data_train_Imputed)
+```
+
+#Imputation on Train dataset
+
+```{r}
+library(DMwR)
+
+customer_data_train_Imputed <- centralImputation(customer_data_train)
+
+```
+
+#Imputation on Test dataset
+
+```{r}
+library(DMwR)
+
+customer_data_test_Imputed <- centralImputation(customer_data_test)
+
+```
+
