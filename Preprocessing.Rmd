@@ -1,5 +1,5 @@
 ---
-title: "Assignment_Preprocessing"
+title: "Preprocessing"
 author: "Veera_Namana"
 date: "8/21/2019"
 output: html_document
@@ -14,6 +14,12 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 
+```{r}
+
+library(fastDummies)
+library(DMwR)
+
+```
 #Read Customer data file
 
 ```{r}
@@ -150,7 +156,6 @@ colSums(is.na(customer_data))
 
 ```{r}
 
-library(fastDummies)
 customer_data_dumm <- dummy_cols(customer_data,remove_first_dummy = TRUE)
 
 ```
@@ -193,7 +198,6 @@ summary(customer_data_train_Imputed)
 #Imputation on Train dataset
 
 ```{r}
-library(DMwR)
 
 customer_data_train_Imputed <- centralImputation(customer_data_train)
 
