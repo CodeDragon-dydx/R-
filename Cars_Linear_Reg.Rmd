@@ -1,0 +1,266 @@
+---
+title: "Cars_linear_regression"
+author: "Veera Namana"
+date: "8/31/2019"
+output: html_document
+---
+
+#PROBLEM STATEMENT - 
+#build a linear regression model for the age and the price columns.
+
+
+```{r}
+
+cars_data <- read.csv("Toyota_SimpleReg.CSV",header = T)
+View(cars_data)
+```
+
+#Exploratory data analysis
+
+```{r}
+colnames(cars_data)  #Display the column names
+str(cars_data)       #structure of the dataset
+
+```
+
+```{r}
+nrow(cars_data)
+ncol(cars_data)
+summary(cars_data)
+```
+
+
+#Looking for missing values
+```{r}
+sum(is.na(cars_data))
+```
+
+
+#Data pre processing
+
+```{r}
+drop_cols <- c("Id","Model")
+cars_data[,drop_cols]<- NULL
+str(cars_data)
+```
+
+
+#Rename Age column
+
+```{r}
+
+colnames(cars_data)[2] <- 'Age'
+str(cars_data)
+
+```
+
+#Scatter Plot
+#Plotting dependent and independent variable
+#Plot used to see the relationship between two continuous variables 
+
+```{r}
+plot(cars_data$Age, cars_data$Price, 
+     main = "Price vs. Age",
+     xlab = "Age of the car (months)",
+     ylab = "Price in $",
+     col = "blue")
+grid(10,10,lwd = 1, col = "Black")
+
+```
+#plot represents negative linear correlation- if age increases price decreases significantly
+
+#Covariance between attributes
+
+```{r}
+cov(cars_data$Age,cars_data$Price)
+```
+#Negative sign indicates that price and age are moving in opposite direction
+
+#Correlation between the attributes
+
+```{r}
+
+cor(cars_data)
+cor_data = cor(cars_data)
+```
+#The value seems to be high negative correlation 
+#That is they move in opposite direction and they are strongly correlated
+
+#corrplot
+
+```{r}
+
+library(corrplot)
+corrplot(cor_data, method = "number")
+
+```
+
+#Model building
+
+#Train Test Split(70:30) - split the data into train and test datasets
+
+```{r}
+
+set.seed(123)
+rows = seq(1,nrow(cars_data),1)
+trainrows = sample(rows, (70*nrow(cars_data))/100)
+cars_train = cars_data[trainrows,]
+cars_test = cars_data[-trainrows,]
+nrow(cars_train)
+nrow(cars_test)
+```
+
+#Building the linear regression model
+
+```{r}
+
+LinReg = lm(Price~Age, data = cars_data)
+
+```
+ 
+
+#Summary of linear model
+
+```{r}
+summary(LinReg)
+```
+
+#Just by the variable Age of the car in the model I can explain 77% of the variation in Price of the car
+#Predictive power of the model is 77%
+
+#F-statistic - reject the null hypothesis(beta = 0) 2.2e^-16<0.05
+#The model is significant
+
+#Individual p-values - both intercept and age are significant (pvalue<0.05)
+
+#For every 1 year increase in age of the car, price of the car goes down by 171$
+
+#Plot the data points and line of best fit
+
+```{r}
+plot(cars_train$Age, cars_train$Price, xlab = "Age of the car",
+     ylab = "Price of the car", main = "Car Price vs Age: Best fit line", 
+     col = "blue")
+
+abline(LinReg, col = "Red", lwd = 1) #The function adds straight line to a plot
+
+```
+
+#To extract the coefficients
+
+```{r}
+
+LinReg$coefficients
+LinReg$coefficients[1]
+LinReg$coefficients[2]
+
+```
+
+#Extracting residuals and fitted values
+
+```{r}
+
+head(LinReg$residuals)
+head(LinReg$fitted.values)
+
+```
+
+#checking Assumptions
+
+```{r}
+
+par(mfrow = c(2,2))
+plot(LinReg, lwd = 1, col = "light green")
+
+```
+
+#NORMAL Q-Q - error terms are normally distributed
+#Residual vs Fitted - Homoscedastic - data has constant variance
+
+#Plot Residuals vs Fitted values
+
+```{r}
+
+plot(LinReg$fitted.values, LinReg$residuals,main = "Residuals vs Fitted values", col = "brown", lwd = 1, xlab = "Predicted/Fitted values", ylab = "Residuals")
+
+abline(h=0,col = 'blue',lwd = 2)
+grid(10,10,lwd=1)
+
+```
+
+#Homoscedastic- data has constant variance
+
+###Predict on Test data
+
+```{r}
+
+test_prediction = predict(LinReg,cars_test)   #Fitted Values
+
+test_actual = cars_test$Price                 #Actual Values
+
+```
+
+
+###Error metrics for regression - MAE
+
+```{r}
+
+mae <- function(actual, predicted){
+  
+  error <- actual - predicted
+  
+  mean(abs(error))
+}
+
+```
+
+### Mean Square Error
+
+```{r}
+
+mse <- function(actual, predicted){
+  
+  error <- actual - predicted
+  
+  mean(error^2)
+  
+}
+
+```
+
+
+###Root Mean Square Error
+
+```{r}
+
+rmse <- function(actual, predicted){
+  
+  error <- actual - predicted
+  
+  sqrt(mean(error^2))
+
+}
+
+
+```
+
+
+###Report performance metrics
+
+
+
+```{r}
+#Error verification on train data
+
+library(DMwR)
+
+regr.eval(cars_train$Price, LinReg$fitted.values)
+
+
+```
+
+```{r}
+
+regr.eval(test_actual,test_prediction)
+
+```
