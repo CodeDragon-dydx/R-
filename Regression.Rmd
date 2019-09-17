@@ -1,0 +1,277 @@
+---
+title: "Regression"
+author: "Veera_Namana"
+date: "9/16/2019"
+output: html_document
+---
+
+#Simple Linear Regression Model
+
+#Clearing previously assigned variables
+```{R, echo = T}
+
+rm(list = ls(all = TRUE))
+
+```
+
+
+#Setting working directory and reading the data
+```{R, echo = T}
+
+getwd()
+setwd("/Users/tejaswinamana/downloads/practice/")
+getwd()
+cars_data = read.csv("Toyota_SimpleReg.csv", header = T)
+```
+
+#Exploratory data analysis
+```{R, echo = T}
+#Display the column names
+colnames(cars_data)  
+
+#Structure of the data
+str(cars_data)
+
+
+```
+
+
+```{R, echo = T}
+nrow(cars_data)   #number of rows in the dataset
+
+ncol(cars_data)   #number of columns in the dataset
+
+```
+
+
+```{R, echo = T}
+
+summary(cars_data)  #Summary of the dataset
+
+```
+
+#Look for missing values
+```{R, echo = T}
+
+sum(is.na(cars_data))
+
+```
+#There are no na values in the dataset
+
+
+#Dropping unnecessary columns
+```{R, echo = T}
+
+drop_cols <- c("Id","Model")
+cars_data[,drop_cols] <- NULL
+
+```
+
+#Checking the structure again after dropping variables
+```{R, echo = T}
+
+str(cars_data)
+
+```
+
+#Renaming Age column
+```{R, echo = T}
+
+#colnames(cars_data)[colnames(cars_data)] == "Age_06_15" <- "Age"
+
+####or#######
+
+colnames(cars_data)[2] <- "Age"
+
+```
+
+#Scatter Plot - plotting dependent and independent variable
+```{R, echo = T}
+
+plot(cars_data$Age,cars_data$Price,
+     main = "Price vs Age",
+     xlab = "Age of the car(months)",
+     ylab = "Price in $",
+     col = "blue")
+
+grid(10,10, lwd = 1, col = "Black")
+
+```
+#The graph represents Price and age are negaively correlated i.e., if one increases the other decreases
+
+
+#Covariance between the attributes
+```{R, echo = T}
+
+cov(cars_data$Price,cars_data$Age)
+
+```
+#The  covariance represents Price and Age are not moving together (due to negative covariance)
+
+#Correlation between the attributes
+```{R, echo = T}
+
+cor_data = cor(cars_data)
+
+cor_data
+```
+#Price and Age are strong negatively correlated(-0.876)
+
+#Corrplot - Graphical representaton of correlation
+```{R, echo = T}
+
+library(corrplot)
+
+corrplot(cor_data, method = "number") #displays correlation coefficient in numbers
+
+```
+
+#Model Building
+
+#Train -Test Split(70:30) - Split the data into Train and Test sets
+```{R, echo = T}
+
+set.seed(123)
+rows = seq(1,nrow(cars_data),1)
+trainRows = sample(rows,(70*nrow(cars_data))/100)
+
+cars_train = cars_data[trainRows,]
+cars_test = cars_data[-trainRows,]
+
+nrow(cars_train)
+nrow(cars_test)
+```
+
+#Building the linear regression model
+```{R, echo = T}
+
+LinReg = lm(Price ~ Age, data = cars_train)
+
+```
+
+#Model Summary
+```{R, echo = T}
+
+summary(LinReg)
+
+```
+###Interpretation-
+
+#77% of varition in price of the car is explained by age of the car(R^2 or Adj R^2)
+#Both Age and intercept are significant (Individual t-test p values)
+#Model is also significant(F-statistic p value)
+#1 year increase in age leads to reduction in price by 170 dollars
+
+#Plot the datapoints and line of best fit
+```{R, echo = T}
+
+plot(cars_train$Age, cars_train$Price,
+     xlab = "Age of the car",
+     ylab = "Price in ($)",
+     main = "Car price Vs. Age: Best fit line", col = "blue")
+
+abline(LinReg,col = "Red", lwd =  1)  #The function adds straigt line to a plot
+
+```
+
+#To extract the coeffcients 
+```{R, echo = T}
+
+LinReg$coefficients
+
+```
+
+#To extract residuals
+```{R, echo = T}
+
+head(LinReg$residuals)
+
+```
+
+#To extract fitted values
+```{R, echo = T}
+
+head(LinReg$fitted.values)
+
+```
+
+#Validating Linear regression assumptions
+```{R, echo = T}
+
+par(mfrow = c(2,2))                         #Par helps us to set the graphical parameters
+plot(LinReg, lwd=1, col = 'light green')    #Check for validity of linear regression assumptions
+
+```
+#From the residual plots we can say the data is homoscedastic
+#The error terms are normally distributed(Q-Q Plot)
+#There are some influential points as per cook's distance(Residual vs Leverage)
+
+#Plot residuals vs fitted values
+#Helps us to visualize how the residuals are distributed in relation to the fitted values 
+```{R, echo = T}
+
+plot(LinReg$fitted.values, LinReg$residuals, main = "Residual vs fitted values", 
+     col = "brown", lwd = 1,
+     xlab = "Predicted values/Fitted values",
+     ylab = "Resiuals")
+
+abline(h = 0,col = 'blue',lwd = 2)
+grid(10,10,lwd=1)
+
+```
+
+#Predict on Test Data
+```{R, echo = T}
+
+test_prediction = predict(LinReg,cars_test)    #Fitted values
+test_actual = cars_data$Price                  #Actual values
+
+```
+
+###Performance metrics
+#MAE - Mean Absolute Error
+```{R, echo = T}
+
+mae <- function(actual, predicted){
+  error = actual-predicted
+  mean(abs(error))
+}
+
+mae(test_actual,test_prediction)
+```
+
+#MSE - Mean Squared Error 
+
+```{R, echo = T}
+
+mse <- function(actual, predicted){
+  error = actual - predicted
+  mean(error^2)
+}
+
+mse(test_actual,test_prediction)
+```
+
+#RMSE - Root Mean Squared Error
+```{R, echo = T}
+
+rmse <- function(actual, predicted){
+  error = actual - predicted
+  sqrt(mean(error^2))
+}
+
+rmse(test_actual,test_prediction)
+
+```
+
+
+```{R, echo = T}
+
+library(DMwR)
+
+regr.eval(cars_train$Price, LinReg$fitted.values)
+
+regr.eval(test_actual,test_prediction)
+
+```
+
